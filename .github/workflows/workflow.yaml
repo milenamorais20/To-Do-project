@@ -1,0 +1,21 @@
+name: Continuos Integration
+
+on: [push]
+
+jobs:
+  continuos-integration:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: mvn package and test
+        run: |
+          mvn package
+          mvn test
