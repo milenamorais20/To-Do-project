@@ -36,3 +36,10 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### Terraform ###
+.terraform/
+*.tfstate
+*.tfstate.backup
+crash.log
+terraform/.terraform.lock.hc
