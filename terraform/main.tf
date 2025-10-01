@@ -112,3 +112,29 @@ output "arn_da_create_lambda" {
 }
 
 # ListTasks Module
+module "ListTasks" {
+  source = "./modules/lambda"
+
+  function_name = "ListTasks"
+  handler = "controller.ListTasks::handleRequest"
+  runtime = "java21"
+  source_code_path = "../target/TODOLambdaJava-1.0-SNAPSHOT.jar"
+  memory_size = 1024
+  timeout = 60
+  tasks_table_name = module.dynamodb.table_name
+  tags = {
+    Project   = "TODOLambdaJava"
+    ManagedBy = "Terraform"
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "list_lambda_dynamodb_read_access" {
+  role = module.ListTasks.iam_role_name
+
+  policy_arn = aws_iam_policy.lambda_dynamodb_read_policy.arn
+}
+
+output "arn_da_list_lambda" {
+  description = "O ARN da função Lambda de listagem de tarefas"
+  value = module.ListTasks.lambda_function_arn
+}
