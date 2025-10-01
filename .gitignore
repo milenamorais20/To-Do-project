@@ -42,3 +42,4 @@ build/
 *.tfstate
 *.tfstate.backup
 crash.log
+terraform/.terraform.lock.hc
