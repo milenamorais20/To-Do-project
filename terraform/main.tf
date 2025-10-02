@@ -172,3 +172,18 @@ output "arn_da_update_lambda" {
   description = "O ARN da função Lambda de atualização de tarefas"
   value = module.UpdateTask.lambda_function_arn
 }
+
+
+# ApiGateway
+module "ApiRest" {
+  source = "./modules/apigateway"
+  bucket_name = "${var.bucket_name}-api"
+
+  uri_create_task = module.CreateTask.lambda_function_arn
+  uri_list_tasks = module.ListTasks.lambda_function_arn
+  uri_updtae_task = module.UpdateTask.lambda_function_arn
+
+  function_create_task = module.CreateTask.lambda_function_name
+  function_list_tasks = module.ListTasks.lambda_function_name
+  function_updtae_task = module.UpdateTask.lambda_function_name
+}
