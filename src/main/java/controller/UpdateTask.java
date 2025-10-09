@@ -14,14 +14,15 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+
+import java.util.Map;
 
 public class UpdateTask implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private final Gson gson = new Gson();
     private final DynamoDbTable<Task> table;
-
-    // PK fixo
-    private static final String FIXED_PK = "user-id-123";
 
     public UpdateTask() {
         DynamoDbClient client = DynamoDbClient.builder().build();
@@ -43,35 +44,46 @@ public class UpdateTask implements RequestHandler<APIGatewayProxyRequestEvent, A
         log.log("Requisição para atualizar task: " + request.getBody());
 
         try {
-            // Captura o SK da URL
-            String sk = request.getPathParameters() != null ? request.getPathParameters().get("sk") : null;
+            // Pega pk e sk da URL
+            Map<String, String> pathParams = request.getPathParameters();
+
+            // Pega os valores codificados
+            String encodedPk = pathParams != null ? pathParams.get("pk") : null;
+            String encodedSk = pathParams != null ? pathParams.get("sk") : null;
+
+            // Decodifica os valores para o formato original %23 -> #
+            String pk = (encodedPk != null) ? URLDecoder.decode(encodedPk, StandardCharsets.UTF_8) : null;
+            String sk = (encodedSk != null) ? URLDecoder.decode(encodedSk, StandardCharsets.UTF_8) : null;
+
+            log.log("Parâmetros decodificados: PK=" + pk + ", SK=" + sk);
+
+//            Verifica como os paramentros estão chegando na aws
+            log.log("Parâmetros recebidos do path: pk=" + pk + ", sk=" + sk);
+
+            if (pk == null || pk.isBlank()) {
+                return ApiResponseBuilder.createErrorResponse(400, "Parâmetro 'pk' é obrigatório na URL");
+            }
             if (sk == null || sk.isBlank()) {
                 return ApiResponseBuilder.createErrorResponse(400, "Parâmetro 'sk' é obrigatório na URL");
             }
-
             // Valida body
             if (request.getBody() == null || request.getBody().isBlank()) {
                 return ApiResponseBuilder.createErrorResponse(400, "O corpo da requisição não pode estar vazio");
             }
-
             JsonObject body = gson.fromJson(request.getBody(), JsonObject.class);
+            // Busca task existente
+            Task existing = table.getItem(
+                    Key.builder().partitionValue(pk).sortValue(sk).build()
+            );
+            if (existing == null) {
+                return ApiResponseBuilder.createErrorResponse(404, "Task não encontrada");
+            }
+            // Aplica atualizações
             if (!body.has("description")) {
                 return ApiResponseBuilder.createErrorResponse(400, "Campo 'description' é obrigatório");
             }
 
             String newDescription = body.get("description").getAsString();
-
-            // Busca task existente
-            Task existing = table.getItem(
-                    Key.builder()
-                            .partitionValue(FIXED_PK)
-                            .sortValue(sk)
-                            .build()
-            );
-
-            if (existing == null) {
-                return ApiResponseBuilder.createErrorResponse(404, "Task não encontrada");
-            }
 
             // Atualiza descrição
             existing.setDescription(newDescription);

@@ -44,10 +44,18 @@ public class ListTasks implements RequestHandler<APIGatewayProxyRequestEvent, AP
         log.log("Requisição recebida para listar tarefas: " + event.getBody());
 
         try {
-            String pk = "user-id-123";
-            List<Task> taskList = repository.getTasksByPk(pk);
+            String pk = null;
 
+            if (event.getQueryStringParameters() != null){
+                pk = event.getQueryStringParameters().get("pk");
+            }
+            if (pk == null || pk.isBlank() || !pk.contains("#")) {
+                return ApiResponseBuilder.createErrorResponse(400, "Parâmetro 'pk' é obrigatório");
+            }
+
+            List<Task> taskList = repository.getTasksByPk(pk);
             return ApiResponseBuilder.createSuccessResponse(200, taskList);
+
         } catch (JsonSyntaxException ex) {
             log.log("Falha ao processar JSON: " + ex.getMessage());
             return ApiResponseBuilder.createErrorResponse(400, "Requisição inválida");

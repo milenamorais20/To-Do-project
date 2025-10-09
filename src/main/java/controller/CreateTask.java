@@ -56,8 +56,19 @@ public class CreateTask implements RequestHandler<APIGatewayProxyRequestEvent, A
             }
 
             Task task = json.fromJson(body, Task.class);
-            task.setPk("user-id-123");
-            task.setSk(UUID.randomUUID().toString());
+
+            String pkPrefix = task.getPk();
+            if (pkPrefix.isBlank() || !pkPrefix.startsWith("USER#")){
+                return ApiResponseBuilder.createErrorResponse(400, "Preencha o campo 'pk' corretamente.");
+            }
+
+            String skPrefix = task.getSk();
+            if (skPrefix == null || !skPrefix.equals("LIST#")){
+                return ApiResponseBuilder.createErrorResponse(400, "O campo 'sk' no corpo da requisição deve ser 'LIST#'.");
+            }
+
+            String newSk = skPrefix + UUID.randomUUID();
+            task.setSk(newSk);
 
             table.putItem(task);
 

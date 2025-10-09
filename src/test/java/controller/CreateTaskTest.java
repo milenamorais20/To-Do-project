@@ -49,6 +49,8 @@ public class CreateTaskTest {
     void testHandleRequest() {
 
         Task task = new Task();
+        task.setPk("USER#milena");
+        task.setSk("LIST#");
         task.setDescription("Este é um teste");
 
         APIGatewayProxyRequestEvent expectredRequest = new APIGatewayProxyRequestEvent();
@@ -58,8 +60,5 @@ public class CreateTaskTest {
         assertEquals(201, expectedResponse.getStatusCode());
 
         verify(taskTable).putItem(any(Task.class));
-
-
     }
-
 }

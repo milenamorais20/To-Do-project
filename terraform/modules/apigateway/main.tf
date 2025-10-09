@@ -26,9 +26,15 @@ resource "aws_api_gateway_resource" "update_task" {
   path_part   = "update-task"
 }
 
-resource "aws_api_gateway_resource" "update_task_sk" {
+resource "aws_api_gateway_resource" "update_task_pk" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   parent_id   = aws_api_gateway_resource.update_task.id
+  path_part   = "{pk}"
+}
+
+resource "aws_api_gateway_resource" "update_task_sk" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  parent_id   = aws_api_gateway_resource.update_task_pk.id
   path_part   = "{sk}"
 }
 

@@ -19,7 +19,7 @@ class UpdateTaskTest {
 
     private DynamoDbTable<Task> mockTable;
     private UpdateTask updateTask;
-    private Context mockContext;
+    private Context context;
 
     @BeforeEach
     void setUp() {
@@ -27,25 +27,22 @@ class UpdateTaskTest {
         updateTask = new UpdateTask(mockTable);
 
         // Mock Lambda Context and Logger
-        mockContext = Mockito.mock(Context.class);
+        context = Mockito.mock(Context.class);
         LambdaLogger mockLogger = Mockito.mock(LambdaLogger.class);
-        when(mockContext.getLogger()).thenReturn(mockLogger);
+        when(context.getLogger()).thenReturn(mockLogger);
     }
 
     @Test
     void shouldUpdateTaskSuccessfully() {
-        // Arrange
-        Task existingTask = new Task("user-id-123", "task-001", "old description");
-        when(mockTable.getItem(any(Key.class))).thenReturn(existingTask);
+        Task task = new Task("USER#milena", "LIST#1", "old description");
+        when(mockTable.getItem(any(Key.class))).thenReturn(task);
 
         APIGatewayProxyRequestEvent request = new APIGatewayProxyRequestEvent()
-                .withPathParameters(java.util.Map.of("sk", "task-001"))
+                .withPathParameters(java.util.Map.of("pk", "USER#milena","sk", "LIST#1"))
                 .withBody("{\"description\":\"new description\"}");
 
-        // Act
-        APIGatewayProxyResponseEvent response = updateTask.handleRequest(request, mockContext);
+        APIGatewayProxyResponseEvent response = updateTask.handleRequest(request, context);
 
-        // Assert
         assertEquals(200, response.getStatusCode());
         assertTrue(response.getBody().contains("new description"));
         verify(mockTable, times(1)).putItem(any(Task.class));
@@ -53,17 +50,14 @@ class UpdateTaskTest {
 
     @Test
     void shouldReturn404WhenTaskDoesNotExist() {
-        // Arrange
         when(mockTable.getItem(any(Key.class))).thenReturn(null);
 
         APIGatewayProxyRequestEvent request = new APIGatewayProxyRequestEvent()
-                .withPathParameters(java.util.Map.of("sk", "nonexistent-task"))
+                .withPathParameters(java.util.Map.of("pk", "USER#milena","sk", "nonexistent-task"))
                 .withBody("{\"description\":\"new description\"}");
 
-        // Act
-        APIGatewayProxyResponseEvent response = updateTask.handleRequest(request, mockContext);
+        APIGatewayProxyResponseEvent response = updateTask.handleRequest(request, context);
 
-        // Assert
         assertEquals(404, response.getStatusCode());
         verify(mockTable, never()).putItem(any(Task.class));
     }
@@ -71,10 +65,10 @@ class UpdateTaskTest {
     @Test
     void shouldReturn400WhenBodyIsEmpty() {
         APIGatewayProxyRequestEvent request = new APIGatewayProxyRequestEvent()
-                .withPathParameters(java.util.Map.of("sk", "task-001"))
+                .withPathParameters(java.util.Map.of("pk", "","sk", "task-001"))
                 .withBody("");
 
-        APIGatewayProxyResponseEvent response = updateTask.handleRequest(request, mockContext);
+        APIGatewayProxyResponseEvent response = updateTask.handleRequest(request, context);
 
         assertEquals(400, response.getStatusCode());
         verify(mockTable, never()).putItem(any(Task.class));
@@ -83,10 +77,10 @@ class UpdateTaskTest {
     @Test
     void shouldReturn400WhenBodyDoesNotContainDescription() {
         APIGatewayProxyRequestEvent request = new APIGatewayProxyRequestEvent()
-                .withPathParameters(java.util.Map.of("sk", "task-001"))
+                .withPathParameters(java.util.Map.of("pk", "","sk", "task-001"))
                 .withBody("{\"otherField\":\"test\"}");
 
-        APIGatewayProxyResponseEvent response = updateTask.handleRequest(request, mockContext);
+        APIGatewayProxyResponseEvent response = updateTask.handleRequest(request, context);
 
         assertEquals(400, response.getStatusCode());
         verify(mockTable, never()).putItem(any(Task.class));
@@ -97,7 +91,7 @@ class UpdateTaskTest {
         APIGatewayProxyRequestEvent request = new APIGatewayProxyRequestEvent()
                 .withBody("{\"description\":\"new description\"}"); // no sk
 
-        APIGatewayProxyResponseEvent response = updateTask.handleRequest(request, mockContext);
+        APIGatewayProxyResponseEvent response = updateTask.handleRequest(request, context);
 
         assertEquals(400, response.getStatusCode());
         verify(mockTable, never()).putItem(any(Task.class));
@@ -109,7 +103,7 @@ class UpdateTaskTest {
                 .withPathParameters(java.util.Map.of("sk", "task-001"))
                 .withBody("{\"description\":}"); // invalid JSON
 
-        APIGatewayProxyResponseEvent response = updateTask.handleRequest(request, mockContext);
+        APIGatewayProxyResponseEvent response = updateTask.handleRequest(request, context);
 
         assertEquals(400, response.getStatusCode());
         verify(mockTable, never()).putItem(any(Task.class));
