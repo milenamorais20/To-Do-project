@@ -43,5 +43,6 @@ build/
 *.tfstate.backup
 crash.log
 terraform/.terraform.lock.hc
+terraform/.terraform.lock.hcl
 terraform/terraform.tfstate.1759359455.backup
 terraform/terraform.tfstate.1759359466.backup
