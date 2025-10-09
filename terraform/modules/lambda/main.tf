@@ -21,10 +21,9 @@ resource "aws_iam_role" "lambda_exec_role" {
   tags = var.tags
 }
 
-resource "aws_iam_policy_attachment" "lambda_basic_execution" {
-  roles      = [aws_iam_role.lambda_exec_role.name]
+resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
+  role       = aws_iam_role.lambda_exec_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-  name       = "lambda_basic_execution"
 }
 
 resource "aws_lambda_function" "this" {
