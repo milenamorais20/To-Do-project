@@ -30,7 +30,7 @@ resource "aws_s3_bucket_public_access_block" "this" {
 module "dynamodb" {
   source = "./modules/dynamodb"
 
-  table_name = "${var.bucket_name}-table"
+  table_name = "${var.bucket_name}-table-2"
   hash_key_name = "pk"
   hash_key_type = "S"
   range_key_name = "sk"
@@ -43,7 +43,7 @@ module "dynamodb" {
 }
 
 resource "aws_iam_policy" "lambda_dynamodb_write_policy" {
-  name = "lambda-dynamodb-tasks-write-policy"
+  name = "lambda-dynamodb-tasks-write-policy-2"
   description = "Policy to allow Lambda functions to access DynamoDB table Tasks"
   policy = jsonencode({
     "Version": "2012-10-17",
@@ -63,7 +63,7 @@ resource "aws_iam_policy" "lambda_dynamodb_write_policy" {
 }
 
 resource "aws_iam_policy" "lambda_dynamodb_read_policy" {
-  name = "lambda-list-tasks-dynamodb-policy"
+  name = "lambda-list-tasks-dynamodb-policy-2"
   description = "Policy to allow Lambda functions to read from DynamoDB table Tasks"
   policy = jsonencode({
     "Version": "2012-10-17",
@@ -85,7 +85,7 @@ resource "aws_iam_policy" "lambda_dynamodb_read_policy" {
 module "CreateTask" {
   source = "./modules/lambda"
 
-  function_name     = "CreateTask"
+  function_name     = "CreateTask-2"
   handler           = "controller.CreateTask::handleRequest"
   runtime           = "java21"
   source_code_path  = "../target/TODOLambdaJava-1.0-SNAPSHOT.jar"
@@ -114,7 +114,7 @@ output "arn_da_create_lambda" {
 module "ListTasks" {
   source = "./modules/lambda"
 
-  function_name = "ListTasks"
+  function_name = "ListTasks-2"
   handler = "controller.ListTasks::handleRequest"
   runtime = "java21"
   source_code_path = "../target/TODOLambdaJava-1.0-SNAPSHOT.jar"
@@ -143,7 +143,7 @@ output "arn_da_list_lambda" {
 module "UpdateTask" {
   source = "./modules/lambda"
 
-  function_name = "UpdateTask"
+  function_name = "UpdateTask-2"
   handler = "controller.UpdateTask::handleRequest"
   runtime = "java21"
   source_code_path = "../target/TODOLambdaJava-1.0-SNAPSHOT.jar"
