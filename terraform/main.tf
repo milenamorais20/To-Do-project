@@ -186,4 +186,19 @@ module "ApiRest" {
   function_create_task = module.CreateTask.lambda_function_name
   function_list_tasks = module.ListTasks.lambda_function_name
   function_updtae_task = module.UpdateTask.lambda_function_name
+
+  cognito_user_pool_arn = module.Cognito.user_pool_arn
+  redeployment_trigger = timestamp()
+}
+
+module "Cognito" {
+  source = "./modules/cognito"
+
+  user_pool_name = "${var.bucket_name}-user-pool"
+  user_pool_client = "${var.bucket_name}-user-pool-client"
+}
+
+output "cognito_user_pool_client_id" {
+  description = "ID do Cliente do User Pool do Cognito para usar na autenticação."
+  value = module.Cognito.cognito_user_pool_client_id
 }
