@@ -1,6 +1,5 @@
 provider "aws" {
   region  = "us-east-1"
-  profile = "default"
 }
 
 # S3
@@ -191,6 +190,7 @@ module "ApiRest" {
   redeployment_trigger = timestamp()
 }
 
+# Cognito
 module "Cognito" {
   source = "./modules/cognito"
 
