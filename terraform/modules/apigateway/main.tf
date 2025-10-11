@@ -38,6 +38,17 @@ resource "aws_api_gateway_resource" "update_list_sk" {
   path_part   = "{sk}"
 }
 
+resource "aws_api_gateway_resource" "item_list" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
+  path_part   = "item-list"
+}
+
+resource "aws_api_gateway_resource" "create_item_list" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  parent_id   = aws_api_gateway_resource.item_list.id
+  path_part   = "create-item-list"
+}
 
 resource "aws_api_gateway_authorizer" "cognito_authorizer" {
   name          = "CognitoUserPoolAuthorizer"
@@ -75,6 +86,14 @@ resource "aws_api_gateway_method" "update_list_put" {
   }
 }
 
+resource "aws_api_gateway_method" "create_item_list_post" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_resource.create_item_list.id
+  http_method   = "POST"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
+}
+
 # ---- Integrations (Lambda Proxy) ----
 resource "aws_api_gateway_integration" "create_list" {
   rest_api_id = aws_api_gateway_rest_api.api.id
@@ -83,7 +102,7 @@ resource "aws_api_gateway_integration" "create_list" {
 
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = "arn:aws:apigateway:${data.aws_region.current.name}:lambda:path/2015-03-31/functions/${var.uri_create_list}/invocations"
+  uri                     = "arn:aws:apigateway:${data.aws_region.current.name}:lambda:path/2015-03-31/functions/${var.uri_create_item_list}/invocations"
 }
 
 resource "aws_api_gateway_integration" "list_lists" {
@@ -104,6 +123,16 @@ resource "aws_api_gateway_integration" "update_list" {
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = "arn:aws:apigateway:${data.aws_region.current.name}:lambda:path/2015-03-31/functions/${var.uri_updtae_list}/invocations"
+}
+
+resource "aws_api_gateway_integration" "create_item_list" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.create_item_list.id
+  http_method = aws_api_gateway_method.create_item_list_post.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = "arn:aws:apigateway:${data.aws_region.current.name}:lambda:path/2015-03-31/functions/${var.uri_create_item_list}/invocations"
 }
 
 # Allow API Gateway to invoke Lambdas
@@ -131,6 +160,14 @@ resource "aws_lambda_permission" "apigw_invoke_update" {
   source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
 }
 
+resource "aws_lambda_permission" "apigw_invoke_create_item" {
+  statement_id  = "AllowAPIGatewayInvoke_create_item"
+  action        = "lambda:InvokeFunction"
+  function_name = var.function_create_list
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
+}
+
 # Deployment and Stage
 resource "aws_api_gateway_deployment" "deployment" {
   rest_api_id = aws_api_gateway_rest_api.api.id
@@ -141,9 +178,15 @@ resource "aws_api_gateway_deployment" "deployment" {
       aws_api_gateway_integration.create_list.id,
       aws_api_gateway_integration.list_lists.id,
       aws_api_gateway_integration.update_list.id,
+
+      aws_api_gateway_integration.create_item_list.id,
+
       var.uri_create_list,
       var.uri_list_lists,
       var.uri_updtae_list,
+
+      var.uri_create_item_list,
+
       var.redeployment_trigger
     ]))
   }
@@ -151,7 +194,9 @@ resource "aws_api_gateway_deployment" "deployment" {
   depends_on = [
     aws_api_gateway_integration.create_list,
     aws_api_gateway_integration.list_lists,
-    aws_api_gateway_integration.update_list
+    aws_api_gateway_integration.update_list,
+
+    aws_api_gateway_integration.create_item_list
   ]
 }
 

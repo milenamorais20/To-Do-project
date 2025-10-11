@@ -38,4 +38,11 @@ public class TaskRepository {
         Task item = table.getItem(key);
         return item != null ? Collections.singletonList(item) : Collections.emptyList();
     }
+
+    public boolean skListExists(String skList){
+        QueryConditional conditional = QueryConditional.keyEqualTo(Key.builder().sortValue(skList).build());
+
+        return conditional.toString().equals(skList);
+
+    }
 }
