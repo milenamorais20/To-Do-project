@@ -15,16 +15,16 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-class UpdateTaskTest {
+class UpdateListTest {
 
     private DynamoDbTable<Task> mockTable;
-    private UpdateTask updateTask;
+    private UpdateList updateTask;
     private Context context;
 
     @BeforeEach
     void setUp() {
         mockTable = Mockito.mock(DynamoDbTable.class);
-        updateTask = new UpdateTask(mockTable);
+        updateTask = new UpdateList(mockTable);
 
         // Mock Lambda Context and Logger
         context = Mockito.mock(Context.class);

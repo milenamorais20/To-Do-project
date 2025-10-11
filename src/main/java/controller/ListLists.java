@@ -15,13 +15,13 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.util.List;
 
-public class ListTasks implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+public class ListLists implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private final Gson jsonConverter = new Gson();
     private final TaskRepository repository;
 
     // Construtor padrão usado na Lambda
-    public ListTasks() {
+    public ListLists() {
         DynamoDbClient client = DynamoDbClient.builder().build();
         DynamoDbEnhancedClient enhanced = DynamoDbEnhancedClient.builder()
                 .dynamoDbClient(client)
@@ -34,7 +34,7 @@ public class ListTasks implements RequestHandler<APIGatewayProxyRequestEvent, AP
     }
 
     // Construtor para testes
-    public ListTasks(TaskRepository repository) {
+    public ListLists(TaskRepository repository) {
         this.repository = repository;
     }
 

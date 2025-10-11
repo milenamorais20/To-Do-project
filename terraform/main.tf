@@ -43,7 +43,7 @@ module "dynamodb" {
 }
 
 resource "aws_iam_policy" "lambda_dynamodb_write_policy" {
-  name = "lambda-dynamodb-tasks-write-policy-2"
+  name = "lambda-dynamodb-tasks-write-policy"
   description = "Policy to allow Lambda functions to access DynamoDB table Tasks"
   policy = jsonencode({
     "Version": "2012-10-17",
@@ -63,7 +63,7 @@ resource "aws_iam_policy" "lambda_dynamodb_write_policy" {
 }
 
 resource "aws_iam_policy" "lambda_dynamodb_read_policy" {
-  name = "lambda-list-tasks-dynamodb-policy-2"
+  name = "lambda-list-tasks-dynamodb-policy"
   description = "Policy to allow Lambda functions to read from DynamoDB table Tasks"
   policy = jsonencode({
     "Version": "2012-10-17",
@@ -81,12 +81,12 @@ resource "aws_iam_policy" "lambda_dynamodb_read_policy" {
   })
 }
 
-# CreateTask Module
-module "CreateTask" {
+# CreateList Module
+module "CreateList" {
   source = "./modules/lambda"
 
-  function_name     = "CreateTask-2"
-  handler           = "controller.CreateTask::handleRequest"
+  function_name     = "CreateList"
+  handler           = "controller.CreateList::handleRequest"
   runtime           = "java21"
   source_code_path  = "../target/TODOLambdaJava-1.0-SNAPSHOT.jar"
   memory_size       = 1024
@@ -99,7 +99,7 @@ module "CreateTask" {
 }
 
 resource "aws_iam_role_policy_attachment" "create_lambda_dynamodb_access" {
-  role = module.CreateTask.iam_role_name
+  role = module.CreateList.iam_role_name
   policy_arn = aws_iam_policy.lambda_dynamodb_write_policy.arn
 }
 output "nome_da_tabela" {
@@ -107,15 +107,15 @@ output "nome_da_tabela" {
 }
 output "arn_da_create_lambda" {
   description = "O ARN da função Lambda de criação de tarefas"
-  value = module.CreateTask.lambda_function_arn
+  value = module.CreateList.lambda_function_arn
 }
 
-# ListTasks Module
-module "ListTasks" {
+# ListLists Module
+module "ListLists" {
   source = "./modules/lambda"
 
-  function_name = "ListTasks-2"
-  handler = "controller.ListTasks::handleRequest"
+  function_name = "ListLists"
+  handler = "controller.ListLists::handleRequest"
   runtime = "java21"
   source_code_path = "../target/TODOLambdaJava-1.0-SNAPSHOT.jar"
   memory_size = 1024
@@ -128,23 +128,23 @@ module "ListTasks" {
 }
 
 resource "aws_iam_role_policy_attachment" "list_lambda_dynamodb_read_access" {
-  role = module.ListTasks.iam_role_name
+  role = module.ListLists.iam_role_name
 
   policy_arn = aws_iam_policy.lambda_dynamodb_read_policy.arn
 }
 
 output "arn_da_list_lambda" {
   description = "O ARN da função Lambda de listagem de tarefas"
-  value = module.ListTasks.lambda_function_arn
+  value = module.ListLists.lambda_function_arn
 }
 
 
-# UpdateTask Module
-module "UpdateTask" {
+# UpdateList Module
+module "UpdateList" {
   source = "./modules/lambda"
 
-  function_name = "UpdateTask-2"
-  handler = "controller.UpdateTask::handleRequest"
+  function_name = "UpdateList"
+  handler = "controller.UpdateList::handleRequest"
   runtime = "java21"
   source_code_path = "../target/TODOLambdaJava-1.0-SNAPSHOT.jar"
   memory_size = 1024
@@ -157,19 +157,19 @@ module "UpdateTask" {
 }
 
 resource "aws_iam_role_policy_attachment" "update_lambda_dynamodb_write_access" {
-  role       = module.UpdateTask.iam_role_name
+  role       = module.UpdateList.iam_role_name
   policy_arn = aws_iam_policy.lambda_dynamodb_write_policy.arn
 }
 
 resource "aws_iam_role_policy_attachment" "update_lambda_dynamodb_read_access" {
-  role = module.UpdateTask.iam_role_name
+  role = module.UpdateList.iam_role_name
 
   policy_arn = aws_iam_policy.lambda_dynamodb_read_policy.arn
 }
 
 output "arn_da_update_lambda" {
   description = "O ARN da função Lambda de atualização de tarefas"
-  value = module.UpdateTask.lambda_function_arn
+  value = module.UpdateList.lambda_function_arn
 }
 
 
@@ -178,13 +178,13 @@ module "ApiRest" {
   source = "./modules/apigateway"
   bucket_name = "${var.bucket_name}-api"
 
-  uri_create_task = module.CreateTask.lambda_function_arn
-  uri_list_tasks = module.ListTasks.lambda_function_arn
-  uri_updtae_task = module.UpdateTask.lambda_function_arn
+  uri_create_task = module.CreateList.lambda_function_arn
+  uri_list_tasks = module.ListLists.lambda_function_arn
+  uri_updtae_task = module.UpdateList.lambda_function_arn
 
-  function_create_task = module.CreateTask.lambda_function_name
-  function_list_tasks = module.ListTasks.lambda_function_name
-  function_updtae_task = module.UpdateTask.lambda_function_name
+  function_create_task = module.CreateList.lambda_function_name
+  function_list_tasks = module.ListLists.lambda_function_name
+  function_updtae_task = module.UpdateList.lambda_function_name
 
   cognito_user_pool_arn = module.Cognito.user_pool_arn
   redeployment_trigger = timestamp()
