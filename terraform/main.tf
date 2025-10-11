@@ -43,7 +43,7 @@ module "dynamodb" {
 }
 
 resource "aws_iam_policy" "lambda_dynamodb_write_policy" {
-  name = "lambda-dynamodb-tasks-write-policy"
+  name = "lambda-dynamodb-lists-write-policy"
   description = "Policy to allow Lambda functions to access DynamoDB table Tasks"
   policy = jsonencode({
     "Version": "2012-10-17",
@@ -63,7 +63,7 @@ resource "aws_iam_policy" "lambda_dynamodb_write_policy" {
 }
 
 resource "aws_iam_policy" "lambda_dynamodb_read_policy" {
-  name = "lambda-list-tasks-dynamodb-policy"
+  name = "lambda-list-lists-dynamodb-policy"
   description = "Policy to allow Lambda functions to read from DynamoDB table Tasks"
   policy = jsonencode({
     "Version": "2012-10-17",
@@ -178,13 +178,13 @@ module "ApiRest" {
   source = "./modules/apigateway"
   bucket_name = "${var.bucket_name}-api"
 
-  uri_create_task = module.CreateList.lambda_function_arn
-  uri_list_tasks = module.ListLists.lambda_function_arn
-  uri_updtae_task = module.UpdateList.lambda_function_arn
+  uri_create_list = module.CreateList.lambda_function_arn
+  uri_list_lists = module.ListLists.lambda_function_arn
+  uri_updtae_list = module.UpdateList.lambda_function_arn
 
-  function_create_task = module.CreateList.lambda_function_name
-  function_list_tasks = module.ListLists.lambda_function_name
-  function_updtae_task = module.UpdateList.lambda_function_name
+  function_create_list = module.CreateList.lambda_function_name
+  function_list_lists = module.ListLists.lambda_function_name
+  function_updtae_list = module.UpdateList.lambda_function_name
 
   cognito_user_pool_arn = module.Cognito.user_pool_arn
   redeployment_trigger = timestamp()
