@@ -188,10 +188,11 @@ module "CreateItemList" {
   }
 }
 
-resource "aws_iam_role_policy_attachment" "create_lambda_dynamodb_access" {
-  role = module.CreateItemList.iam_role_name
-  policy_arn = aws_iam_policy.lambda_dynamodb_write_policy.arn
-}
+# PROVAVELMENTE DELETAR
+# resource "aws_iam_role_policy_attachment" "create_lambda_dynamodb_access" {
+#   role = module.CreateItemList.iam_role_name
+#   policy_arn = aws_iam_policy.lambda_dynamodb_write_policy.arn
+# }
 
 output "arn_da_create_item_list_lambda" {
   description = "O ARN da função Lambda de criação de item da lista"
