@@ -28,39 +28,39 @@ jobs:
           name: java-lambda-package
           path: target/TODOLambdaJava-1.0-SNAPSHOT.jar
 
-  continous-delivery:
-    needs: continous-integration
-    runs-on: ubuntu-latest
-
-    env:
-      TF_VAR_bucket_name: ${{ secrets.BUCKET_NAME_TODO_LIST }}
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v5
-
-      - name: Download JAR Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: java-lambda-package
-          path: target/
-
-      - name: AWS CLI
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{secrets.AWS_ACCESS_KEY_ID}}
-          aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
-          aws-region: us-east-1
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.13.3
-
-      - name: Terraform init, plan e apply (DEPLOY)
-        run: |
-          cd terraform
-          terraform init
-          terraform plan
-          terraform apply -auto-approve
+#  continous-delivery:
+#    needs: continous-integration
+#    runs-on: ubuntu-latest
+#
+#    env:
+#      TF_VAR_bucket_name: ${{ secrets.BUCKET_NAME_TODO_LIST }}
+#
+#    steps:
+#      - name: Checkout Repository
+#        uses: actions/checkout@v5
+#
+#      - name: Download JAR Artifact
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: java-lambda-package
+#          path: target/
+#
+#      - name: AWS CLI
+#        uses: aws-actions/configure-aws-credentials@v2
+#        with:
+#          aws-access-key-id: ${{secrets.AWS_ACCESS_KEY_ID}}
+#          aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+#          aws-region: us-east-1
+#
+#      - name: Setup Terraform
+#        uses: hashicorp/setup-terraform@v3
+#        with:
+#          terraform_version: 1.13.3
+#
+#      - name: Terraform init, plan e apply (DEPLOY)
+#        run: |
+#          cd terraform
+#          terraform init
+#          terraform plan
+#          terraform apply -auto-approve
 
