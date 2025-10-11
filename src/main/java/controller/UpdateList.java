@@ -19,12 +19,12 @@ import java.nio.charset.StandardCharsets;
 
 import java.util.Map;
 
-public class UpdateTask implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+public class UpdateList implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private final Gson gson = new Gson();
     private final DynamoDbTable<Task> table;
 
-    public UpdateTask() {
+    public UpdateList() {
         DynamoDbClient client = DynamoDbClient.builder().build();
         DynamoDbEnhancedClient enhanced = DynamoDbEnhancedClient.builder()
                 .dynamoDbClient(client)
@@ -34,7 +34,7 @@ public class UpdateTask implements RequestHandler<APIGatewayProxyRequestEvent, A
         this.table = enhanced.table(tableName, TableSchema.fromBean(Task.class));
     }
 
-    public UpdateTask(DynamoDbTable<Task> table) {
+    public UpdateList(DynamoDbTable<Task> table) {
         this.table = table;
     }
 

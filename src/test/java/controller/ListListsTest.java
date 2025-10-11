@@ -26,7 +26,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class ListTasksTest {
+public class ListListsTest {
 
     @Mock
     private Context context;
@@ -40,13 +40,13 @@ public class ListTasksTest {
     @Mock
     private TaskRepository taskRepository;
 
-    private ListTasks listTasks ;
+    private ListLists listTasks ;
 
     private final Gson gson = new Gson();
 
     @BeforeEach
     void setUp() {
-        listTasks = new ListTasks(taskRepository);
+        listTasks = new ListLists(taskRepository);
 
 
         when(context.getLogger()).thenReturn(logger);

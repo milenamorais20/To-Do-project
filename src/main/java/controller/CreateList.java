@@ -19,13 +19,13 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.util.UUID;
 
-public class CreateTask implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+public class CreateList implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private final DynamoDbTable<Task> table;
     private final Gson json;
 
     // Construtor padrão usado pela Lambda
-    public CreateTask() {
+    public CreateList() {
         DynamoDbClient client = DynamoDbClient.builder().build();
         DynamoDbEnhancedClient enhanced = DynamoDbEnhancedClient.builder()
                 .dynamoDbClient(client)
@@ -37,7 +37,7 @@ public class CreateTask implements RequestHandler<APIGatewayProxyRequestEvent, A
     }
 
     // Construtor auxiliar para testes
-    public CreateTask(DynamoDbTable<Task> table, Gson json) {
+    public CreateList(DynamoDbTable<Task> table, Gson json) {
         this.table = table;
         this.json = json;
     }

@@ -22,7 +22,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class CreateTaskTest {
+public class CreateListTest {
 
     @Mock
     private Context context;
@@ -33,14 +33,14 @@ public class CreateTaskTest {
     @Mock
     private DynamoDbTable<Task> taskTable;
 
-    private CreateTask createTask ;
+    private CreateList createTask ;
 
     private final Gson gson = new Gson();
 
     @BeforeEach
     void setUp() {
         // Usando o construtor que aceita dependências para injeção de mocks
-        createTask = new CreateTask(taskTable, gson);
+        createTask = new CreateList(taskTable, gson);
 
         when(context.getLogger()).thenReturn(logger);
     }
