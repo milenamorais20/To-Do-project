@@ -102,7 +102,7 @@ resource "aws_api_gateway_integration" "create_list" {
 
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = "arn:aws:apigateway:${data.aws_region.current.name}:lambda:path/2015-03-31/functions/${var.uri_create_item_list}/invocations"
+  uri                     = "arn:aws:apigateway:${data.aws_region.current.name}:lambda:path/2015-03-31/functions/${var.uri_create_list}/invocations"
 }
 
 resource "aws_api_gateway_integration" "list_lists" {
@@ -122,7 +122,7 @@ resource "aws_api_gateway_integration" "update_list" {
 
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = "arn:aws:apigateway:${data.aws_region.current.name}:lambda:path/2015-03-31/functions/${var.uri_updtae_list}/invocations"
+  uri                     = "arn:aws:apigateway:${data.aws_region.current.name}:lambda:path/2015-03-31/functions/${var.uri_update_list}/invocations"
 }
 
 resource "aws_api_gateway_integration" "create_item_list" {
@@ -155,7 +155,7 @@ resource "aws_lambda_permission" "apigw_invoke_list" {
 resource "aws_lambda_permission" "apigw_invoke_update" {
   statement_id  = "AllowAPIGatewayInvoke_update"
   action        = "lambda:InvokeFunction"
-  function_name = var.function_updtae_list
+  function_name = var.function_update_list
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
 }
@@ -163,7 +163,7 @@ resource "aws_lambda_permission" "apigw_invoke_update" {
 resource "aws_lambda_permission" "apigw_invoke_create_item" {
   statement_id  = "AllowAPIGatewayInvoke_create_item"
   action        = "lambda:InvokeFunction"
-  function_name = var.function_create_list
+  function_name = var.function_create_item_list
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
 }
@@ -183,7 +183,7 @@ resource "aws_api_gateway_deployment" "deployment" {
 
       var.uri_create_list,
       var.uri_list_lists,
-      var.uri_updtae_list,
+      var.uri_update_list,
 
       var.uri_create_item_list,
 

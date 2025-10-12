@@ -30,7 +30,7 @@ resource "aws_s3_bucket_public_access_block" "this" {
 module "dynamodb" {
   source = "./modules/dynamodb"
 
-  table_name = "${var.bucket_name}-table-2"
+  table_name = "${var.bucket_name}-table"
   hash_key_name = "pk"
   hash_key_type = "S"
   range_key_name = "sk"
@@ -188,11 +188,10 @@ module "CreateItemList" {
   }
 }
 
-# PROVAVELMENTE DELETAR
-# resource "aws_iam_role_policy_attachment" "create_lambda_dynamodb_access" {
-#   role = module.CreateItemList.iam_role_name
-#   policy_arn = aws_iam_policy.lambda_dynamodb_write_policy.arn
-# }
+resource "aws_iam_role_policy_attachment" "create_item_lambda_dynamodb_access" {
+  role = module.CreateItemList.iam_role_name
+  policy_arn = aws_iam_policy.lambda_dynamodb_write_policy.arn
+}
 
 output "arn_da_create_item_list_lambda" {
   description = "O ARN da função Lambda de criação de item da lista"
@@ -207,13 +206,13 @@ module "ApiRest" {
 
   uri_create_list = module.CreateList.lambda_function_arn
   uri_list_lists = module.ListLists.lambda_function_arn
-  uri_updtae_list = module.UpdateList.lambda_function_arn
+  uri_update_list = module.UpdateList.lambda_function_arn
 
   uri_create_item_list = module.CreateItemList.lambda_function_arn
 
   function_create_list = module.CreateList.lambda_function_name
   function_list_lists = module.ListLists.lambda_function_name
-  function_updtae_list = module.UpdateList.lambda_function_name
+  function_update_list = module.UpdateList.lambda_function_name
 
   function_create_item_list = module.CreateItemList.lambda_function_name
 

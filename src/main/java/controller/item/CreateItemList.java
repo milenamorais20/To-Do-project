@@ -22,14 +22,14 @@ public class CreateItemList implements RequestHandler<APIGatewayProxyRequestEven
     private final TaskRepository repository;
     private final Gson json;
 
-    public CreateItemList(TaskRepository repository){
+    public CreateItemList(){
         DynamoDbClient client = DynamoDbClient.builder().build();
         DynamoDbEnhancedClient enhanced = DynamoDbEnhancedClient.builder().dynamoDbClient(client).build();
 
         String tableName = System.getenv("TASKS_TABLE");
         this.table = enhanced.table(tableName, TableSchema.fromBean(Task.class));
         this.json = new Gson();
-        this.repository = repository;
+        this.repository = new TaskRepository(table);
 
     }
 
@@ -55,18 +55,23 @@ public class CreateItemList implements RequestHandler<APIGatewayProxyRequestEven
 
             Task item = json.fromJson(body, Task.class);
 
-            String pkItem = item.getPk();
-            if (pkItem == null || pkItem.isBlank()){
+            String pkList = item.getPk();
+            if (pkList == null || pkList.isBlank()){
                 return ApiResponseBuilder.createErrorResponse(400, "O campo 'pk' no corpo da requisição deve ser preenchido.");
             }
 
-            boolean skListExists = repository.skListExists(pkItem);
+            String skList = item.getSk();
+            if (skList == null || skList.isBlank()){
+                return ApiResponseBuilder.createErrorResponse(400, "O campo 'pk' no corpo da requisição deve ser preenchido.");
+            }
+
+            boolean skListExists = repository.skListExists(pkList, skList);
             if (!skListExists){
                 return ApiResponseBuilder.createErrorResponse(400, "Não existe nenhuma lista com esse sk");
             }
 
-            String skItem = UUID.randomUUID().toString();
-            item.setSk(skItem);
+            item.setPk(skList);
+            item.setSk(UUID.randomUUID().toString());
 
             table.putItem(item);
 

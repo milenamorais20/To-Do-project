@@ -47,14 +47,14 @@ public class CreateItemListTest {
     @Test
     void shouldReturnHTTPStatus200(){
         Task item = new Task();
-        item.setPk("LIST#123");
-        item.setSk(UUID.randomUUID().toString());
+        item.setPk("USER#milena");
+        item.setSk("LIST#123");
         item.setDescription("Este é um teste");
 
         APIGatewayProxyRequestEvent requestEvent = new APIGatewayProxyRequestEvent();
         requestEvent.setBody(gson.toJson(item));
 
-        when(repository.skListExists("LIST#123")).thenReturn(true);
+        when(repository.skListExists("USER#milena","LIST#123")).thenReturn(true);
 
         APIGatewayProxyResponseEvent responseEvent = createItemList.handleRequest(requestEvent,context);
 
