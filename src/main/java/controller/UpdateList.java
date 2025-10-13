@@ -57,9 +57,6 @@ public class UpdateList implements RequestHandler<APIGatewayProxyRequestEvent, A
 
             log.log("Parâmetros decodificados: PK=" + pk + ", SK=" + sk);
 
-//            Verifica como os paramentros estão chegando na aws
-            log.log("Parâmetros recebidos do path: pk=" + pk + ", sk=" + sk);
-
             if (pk == null || pk.isBlank()) {
                 return ApiResponseBuilder.createErrorResponse(400, "Parâmetro 'pk' é obrigatório na URL");
             }

@@ -226,6 +226,39 @@ output "arn_da_list_items_lambda" {
   value = module.ListItemsList.lambda_function_arn
 }
 
+# UpdateList Module
+module "UpdateItemList" {
+  source = "./modules/lambda"
+
+  function_name = "UpdateItemList"
+  handler = "controller.item.UpdateItemList::handleRequest"
+  runtime = "java21"
+  source_code_path = "../target/TODOLambdaJava-1.0-SNAPSHOT.jar"
+  memory_size = 1024
+  timeout = 60
+  tasks_table_name = module.dynamodb.table_name
+  tags = {
+    Project   = "TODOLambdaJava"
+    ManagedBy = "Terraform"
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "update_item_list_lambda_dynamodb_write_access" {
+  role       = module.UpdateItemList.iam_role_name
+  policy_arn = aws_iam_policy.lambda_dynamodb_write_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "update_item_list_lambda_dynamodb_read_access" {
+  role = module.UpdateItemList.iam_role_name
+
+  policy_arn = aws_iam_policy.lambda_dynamodb_read_policy.arn
+}
+
+output "arn_da_update_item_list_lambda" {
+  description = "O ARN da função Lambda de atualização de tarefas"
+  value = module.UpdateItemList.lambda_function_arn
+}
+
 # ApiGateway
 module "ApiRest" {
   source = "./modules/apigateway"
@@ -237,6 +270,7 @@ module "ApiRest" {
 
   uri_create_item_list = module.CreateItemList.lambda_function_arn
   uri_list_items_list = module.ListItemsList.lambda_function_arn
+  uri_update_item_list = module.UpdateItemList.lambda_function_arn
 
   function_create_list = module.CreateList.lambda_function_name
   function_list_lists = module.ListLists.lambda_function_name
@@ -244,6 +278,7 @@ module "ApiRest" {
 
   function_create_item_list = module.CreateItemList.lambda_function_name
   function_list_items_list = module.ListItemsList.lambda_function_name
+  function_update_item_list = module.UpdateItemList.lambda_function_name
 
   cognito_user_pool_arn = module.Cognito.user_pool_arn
   redeployment_trigger = timestamp()
