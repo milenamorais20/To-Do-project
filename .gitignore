@@ -40,6 +40,7 @@ build/
 ### Terraform ###
 .terraform/
 *.tfstate
+*.tfstate.*
 *.tfstate.backup
 crash.log
 terraform/.terraform.lock.hc

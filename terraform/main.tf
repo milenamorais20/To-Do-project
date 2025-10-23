@@ -172,6 +172,34 @@ output "arn_da_update_lambda" {
   value = module.UpdateList.lambda_function_arn
 }
 
+#GetListById Module
+module "ListById" {
+  source = "./modules/lambda"
+
+  function_name = "ListById"
+  handler = "controller.GetListById::handleRequest"
+  runtime = "java21"
+  source_code_path = "../target/TODOLambdaJava-1.0-SNAPSHOT.jar"
+  memory_size = 1024
+  timeout = 60
+  tasks_table_name = module.dynamodb.table_name
+  tags = {
+    Project   = "TODOLambdaJava"
+    ManagedBy = "Terraform"
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "list_by_id_lambda_dynamodb_read_access" {
+  role = module.ListById.iam_role_name
+
+  policy_arn = aws_iam_policy.lambda_dynamodb_read_policy.arn
+}
+
+output "arn_da_list_by_id_lambda" {
+  description = "O ARN da função Lambda de listagem de tarefas"
+  value = module.ListById.lambda_function_arn
+}
+
 module "CreateItemList" {
   source = "./modules/lambda"
 
@@ -198,7 +226,7 @@ output "arn_da_create_item_list_lambda" {
   value = module.CreateItemList.lambda_function_arn
 }
 
-# ListLists Module
+# ListItemsLists Module
 module "ListItemsList" {
   source = "./modules/lambda"
 
@@ -226,7 +254,7 @@ output "arn_da_list_items_lambda" {
   value = module.ListItemsList.lambda_function_arn
 }
 
-# UpdateList Module
+# UpdateItemList Module
 module "UpdateItemList" {
   source = "./modules/lambda"
 
@@ -259,6 +287,34 @@ output "arn_da_update_item_list_lambda" {
   value = module.UpdateItemList.lambda_function_arn
 }
 
+# DeleteItemList Module
+module "DeleteItemList" {
+  source = "./modules/lambda"
+
+  function_name = "DeleteItemList"
+  handler = "controller.item.DeleteItemList::handleRequest"
+  runtime = "java21"
+  source_code_path = "../target/TODOLambdaJava-1.0-SNAPSHOT.jar"
+  memory_size = 1024
+  timeout = 60
+  tasks_table_name = module.dynamodb.table_name
+  tags = {
+    Project   = "TODOLambdaJava"
+    ManagedBy = "Terraform"
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "delete_item_list_lambda_dynamodb_write_access" {
+  role = module.DeleteItemList.iam_role_name
+
+  policy_arn = aws_iam_policy.lambda_dynamodb_write_policy.arn
+}
+
+output "arn_da_delete_item_list_lambda" {
+  description = "O ARN da função Lambda de atualização de tarefas"
+  value = module.DeleteItemList.lambda_function_arn
+}
+
 # ApiGateway
 module "ApiRest" {
   source = "./modules/apigateway"
@@ -267,18 +323,22 @@ module "ApiRest" {
   uri_create_list = module.CreateList.lambda_function_arn
   uri_list_lists = module.ListLists.lambda_function_arn
   uri_update_list = module.UpdateList.lambda_function_arn
+  uri_get_list_by_id = module.ListById.lambda_function_arn
 
   uri_create_item_list = module.CreateItemList.lambda_function_arn
   uri_list_items_list = module.ListItemsList.lambda_function_arn
   uri_update_item_list = module.UpdateItemList.lambda_function_arn
+  uri_delete_item_list = module.DeleteItemList.lambda_function_arn
 
   function_create_list = module.CreateList.lambda_function_name
   function_list_lists = module.ListLists.lambda_function_name
   function_update_list = module.UpdateList.lambda_function_name
+  function_get_list_by_id = module.ListById.lambda_function_name
 
   function_create_item_list = module.CreateItemList.lambda_function_name
   function_list_items_list = module.ListItemsList.lambda_function_name
   function_update_item_list = module.UpdateItemList.lambda_function_name
+  function_delete_item_list = module.DeleteItemList.lambda_function_name
 
   cognito_user_pool_arn = module.Cognito.user_pool_arn
   redeployment_trigger = timestamp()

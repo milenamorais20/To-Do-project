@@ -44,6 +44,12 @@ resource "aws_api_gateway_resource" "item_list" {
   path_part   = "item-list"
 }
 
+resource "aws_api_gateway_resource" "list_by_id_list" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
+  path_part   = "list-by-id-list"
+}
+
 resource "aws_api_gateway_resource" "create_item_list" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   parent_id   = aws_api_gateway_resource.item_list.id
@@ -72,6 +78,12 @@ resource "aws_api_gateway_resource" "update_item_list_sk" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   parent_id   = aws_api_gateway_resource.update_item_list_pk.id
   path_part   = "{sk}"
+}
+
+resource "aws_api_gateway_resource" "delete_item_list" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  parent_id   = aws_api_gateway_resource.item_list.id
+  path_part   = "delete-item-list"
 }
 
 resource "aws_api_gateway_authorizer" "cognito_authorizer" {
@@ -110,6 +122,14 @@ resource "aws_api_gateway_method" "update_list_put" {
   }
 }
 
+resource "aws_api_gateway_method" "list_by_id_list_get" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_resource.list_by_id_list.id
+  http_method   = "GET"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
+}
+
 resource "aws_api_gateway_method" "create_item_list_post" {
   rest_api_id   = aws_api_gateway_rest_api.api.id
   resource_id   = aws_api_gateway_resource.create_item_list.id
@@ -136,6 +156,14 @@ resource "aws_api_gateway_method" "update_item_list_put" {
   request_parameters = {
     "method.request.path.sk" = true
   }
+}
+
+resource "aws_api_gateway_method" "delete_item_list_delete" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_resource.delete_item_list.id
+  http_method   = "DELETE"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
 }
 
 # ---- Integrations (Lambda Proxy) ----
@@ -169,6 +197,16 @@ resource "aws_api_gateway_integration" "update_list" {
   uri                     = "arn:aws:apigateway:${data.aws_region.current.name}:lambda:path/2015-03-31/functions/${var.uri_update_list}/invocations"
 }
 
+resource "aws_api_gateway_integration" "list_by_id_list" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.list_by_id_list.id
+  http_method = aws_api_gateway_method.list_by_id_list_get.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = "arn:aws:apigateway:${data.aws_region.current.name}:lambda:path/2015-03-31/functions/${var.uri_get_list_by_id}/invocations"
+}
+
 resource "aws_api_gateway_integration" "create_item_list" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   resource_id = aws_api_gateway_resource.create_item_list.id
@@ -199,6 +237,16 @@ resource "aws_api_gateway_integration" "update_item_list" {
   uri                     = "arn:aws:apigateway:${data.aws_region.current.name}:lambda:path/2015-03-31/functions/${var.uri_update_item_list}/invocations"
 }
 
+resource "aws_api_gateway_integration" "delete_item_list" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.delete_item_list.id
+  http_method = aws_api_gateway_method.delete_item_list_delete.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = "arn:aws:apigateway:${data.aws_region.current.name}:lambda:path/2015-03-31/functions/${var.uri_delete_item_list}/invocations"
+}
+
 # Allow API Gateway to invoke Lambdas
 resource "aws_lambda_permission" "apigw_invoke_create" {
   statement_id  = "AllowAPIGatewayInvoke_create"
@@ -224,6 +272,14 @@ resource "aws_lambda_permission" "apigw_invoke_update" {
   source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
 }
 
+resource "aws_lambda_permission" "apigw_invoke_list_by_id" {
+  statement_id  = "AllowAPIGatewayInvoke_listById"
+  action        = "lambda:InvokeFunction"
+  function_name = var.function_get_list_by_id
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
+}
+
 resource "aws_lambda_permission" "apigw_invoke_create_item" {
   statement_id  = "AllowAPIGatewayInvoke_create_item"
   action        = "lambda:InvokeFunction"
@@ -239,10 +295,19 @@ resource "aws_lambda_permission" "apigw_invoke_item_list" {
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
 }
+
 resource "aws_lambda_permission" "apigw_invoke_update_item_list" {
   statement_id  = "AllowAPIGatewayInvoke_update_item_list"
   action        = "lambda:InvokeFunction"
   function_name = var.function_update_item_list
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "apigw_invoke_delete_item_list" {
+  statement_id  = "AllowAPIGatewayInvoke_deleteItemList"
+  action        = "lambda:InvokeFunction"
+  function_name = var.function_delete_item_list
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
 }
@@ -261,18 +326,22 @@ resource "aws_api_gateway_deployment" "deployment" {
       aws_api_gateway_integration.create_list.id,
       aws_api_gateway_integration.list_lists.id,
       aws_api_gateway_integration.update_list.id,
+      aws_api_gateway_integration.list_by_id_list.id,
 
       aws_api_gateway_integration.create_item_list.id,
       aws_api_gateway_integration.list_items_list.id,
       aws_api_gateway_integration.update_item_list.id,
+      aws_api_gateway_integration.delete_item_list.id,
 
       var.uri_create_list,
       var.uri_list_lists,
       var.uri_update_list,
+      var.uri_get_list_by_id,
 
       var.uri_create_item_list,
       var.uri_list_items_list,
       var.uri_update_item_list,
+      var.uri_delete_item_list,
 
       var.redeployment_trigger
     ]))
@@ -282,10 +351,12 @@ resource "aws_api_gateway_deployment" "deployment" {
     aws_api_gateway_integration.create_list,
     aws_api_gateway_integration.list_lists,
     aws_api_gateway_integration.update_list,
+    aws_api_gateway_integration.list_by_id_list,
 
     aws_api_gateway_integration.create_item_list,
     aws_api_gateway_integration.list_items_list,
-    aws_api_gateway_integration.update_item_list
+    aws_api_gateway_integration.update_item_list,
+    aws_api_gateway_integration.delete_item_list
   ]
 }
 
