@@ -72,7 +72,7 @@ public class CreateList implements RequestHandler<APIGatewayProxyRequestEvent, A
 
             table.putItem(task);
 
-            log.log("Tarefa criada com sucesso! ID: " + task.getSk());
+            log.log("Tarefa criada com sucesso!! ID: " + task.getSk());
 
             return ApiResponseBuilder.createSuccessResponse(201, json.toJson(task));
 
