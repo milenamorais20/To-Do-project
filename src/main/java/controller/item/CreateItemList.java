@@ -30,7 +30,6 @@ public class CreateItemList implements RequestHandler<APIGatewayProxyRequestEven
         this.table = enhanced.table(tableName, TableSchema.fromBean(Task.class));
         this.json = new Gson();
         this.repository = new TaskRepository(table);
-
     }
 
     //Testes Unitários

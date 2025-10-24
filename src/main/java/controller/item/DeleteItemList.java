@@ -55,7 +55,7 @@ public class DeleteItemList implements RequestHandler<APIGatewayProxyRequestEven
             if (pk == null || pk.isBlank() || !pk.contains("#")){
                return ApiResponseBuilder.createErrorResponse(400, "Preencha o 'pk' corretamente");
             }
-            if (sk == null || sk.isBlank())){
+            if (sk == null || sk.isBlank()){
                 return ApiResponseBuilder.createErrorResponse(400, "Preencha o 'sk' corretamente");
             }
 
