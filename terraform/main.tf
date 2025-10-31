@@ -330,6 +330,8 @@ module "ApiRest" {
   uri_update_item_list = module.UpdateItemList.lambda_function_arn
   uri_delete_item_list = module.DeleteItemList.lambda_function_arn
 
+  uri_export_request_list = module.ExportRequest.lambda_function_arn
+
   function_create_list = module.CreateList.lambda_function_name
   function_list_lists = module.ListLists.lambda_function_name
   function_update_list = module.UpdateList.lambda_function_name
@@ -339,6 +341,8 @@ module "ApiRest" {
   function_list_items_list = module.ListItemsList.lambda_function_name
   function_update_item_list = module.UpdateItemList.lambda_function_name
   function_delete_item_list = module.DeleteItemList.lambda_function_name
+
+  function_export_request_list = module.ExportRequest.lambda_function_name
 
   cognito_user_pool_arn = module.Cognito.user_pool_arn
   redeployment_trigger = timestamp()
@@ -355,4 +359,163 @@ module "Cognito" {
 output "cognito_user_pool_client_id" {
   description = "ID do Cliente do User Pool do Cognito para usar na autenticação."
   value = module.Cognito.cognito_user_pool_client_id
+}
+
+# Variável para o e-mail remetente
+variable "ses_from_email" {
+  type        = string
+  description = "O e-mail verificado no SES para usar como remetente."
+  # Você pode definir um 'default' ou passar via .tfvars
+  # default     = "seu-email@example.com"
+}
+
+# Recurso para verificar a identidade do e-mail no SES
+resource "aws_ses_email_identity" "from_email" {
+  email = var.ses_from_email
+}
+
+# Fila SQS para processamento assíncrono dos relatórios
+resource "aws_sqs_queue" "report_queue" {
+  name                       = "${var.bucket_name}-report-queue" # Usa sua variável de nome existente
+  visibility_timeout_seconds = 300 # 5 minutos (deve ser >= timeout da LambdaGet)
+}
+
+# Política para a LambdaPost (ExportRequest) enviar mensagens ao SQS
+resource "aws_iam_policy" "lambda_sqs_send_policy" {
+  name        = "lambda-export-sqs-send-policy"
+  description = "Permite que a Lambda envie mensagens para a fila de relatórios"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action   = "sqs:SendMessage",
+        Resource = aws_sqs_queue.report_queue.arn
+      }
+    ]
+  })
+}
+
+# Política para a LambdaGet (ExportProcess) ler do S3 e enviar pelo SES
+resource "aws_iam_policy" "lambda_export_process_policy" {
+  name        = "lambda-export-process-policy"
+  description = "Permite que a Lambda escreva no S3 e envie e-mail pelo SES"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action   = "ses:SendRawEmail",
+        Resource = "*" # O envio de e-mail geralmente é '*' ou no ARN da identidade
+        # Para maior segurança, restrinja ao ARN da identidade SES:
+        # Resource = aws_ses_email_identity.from_email.arn
+      },
+      {
+        Effect   = "Allow",
+        Action   = "s3:PutObject",
+        # Concede acesso de escrita apenas na pasta 'exports/' do seu bucket
+        Resource = "${aws_s3_bucket.this.arn}/exports/*"
+      }
+    ]
+  })
+}
+
+# Lambda 1: LambdaPostFunction (API -> SQS)
+module "ExportRequest" {
+  source = "./modules/lambda"
+
+  function_name = "ExportRequest"
+  handler       = "controller.export.LambdaPostFunction::handleRequest"
+  runtime       = "java21"
+  source_code_path = "../target/TODOLambdaJava-1.0-SNAPSHOT.jar"
+  memory_size   = 1024
+  timeout       = 60
+
+  # Passa a URL da fila SQS como variável de ambiente
+  environment_variables = {
+    SQS_QUEUE_URL = aws_sqs_queue.report_queue.id # .id retorna a URL da fila
+  }
+
+  tasks_table_name = module.dynamodb.table_name # Necessário para o módulo
+  tags = {
+    Project   = "TODOLambdaJava"
+    ManagedBy = "Terraform"
+  }
+}
+
+# Anexa a política de envio ao SQS
+resource "aws_iam_role_policy_attachment" "export_request_sqs_access" {
+  role       = module.ExportRequest.iam_role_name
+  policy_arn = aws_iam_policy.lambda_sqs_send_policy.arn
+}
+
+# Lambda 2: LambdaGetFunction (SQS -> DDB -> S3 -> SES)
+module "ExportProcess" {
+  source = "./modules/lambda"
+
+  function_name = "ExportProcess"
+  handler       = "controller.export.LambdaGetFunction::handleRequest"
+  runtime       = "java21"
+  source_code_path = "../target/TODOLambdaJava-1.0-SNAPSHOT.jar"
+  memory_size   = 1024
+  timeout       = 300 # 5 minutos (mesmo tempo do SQS visibility timeout)
+
+  # Passa todas as variáveis de ambiente necessárias
+  environment_variables = {
+    # TASKS_TABLE é adicionada automaticamente pelo módulo
+    S3_BUCKET_NAME = aws_s3_bucket.this.bucket # Pega o nome do bucket já criado
+    SES_FROM_EMAIL = var.ses_from_email
+  }
+
+  tasks_table_name = module.dynamodb.table_name
+  tags = {
+    Project   = "TODOLambdaJava"
+    ManagedBy = "Terraform"
+  }
+}
+
+# Anexa as políticas necessárias à LambdaGet
+resource "aws_iam_role_policy_attachment" "export_process_dynamodb_access" {
+  role       = module.ExportProcess.iam_role_name
+  # Reutiliza sua política de leitura do DynamoDB existente
+  policy_arn = aws_iam_policy.lambda_dynamodb_read_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "export_process_s3_ses_access" {
+  role       = module.ExportProcess.iam_role_name
+  policy_arn = aws_iam_policy.lambda_export_process_policy.arn
+}
+
+# LambdaGet ler da fila SQS
+resource "aws_iam_policy" "lambda_sqs_receive_policy" {
+  name        = "lambda-export-sqs-receive-policy"
+  description = "Permite que a Lambda leia mensagens da fila de relatórios"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action = [
+          # Permissões necessárias para o gatilho do SQS
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes"
+        ],
+        Resource = aws_sqs_queue.report_queue.arn
+      }
+    ]
+  })
+}
+
+# Política de leitura do SQS na Lambda ExportProcess
+resource "aws_iam_role_policy_attachment" "export_process_sqs_access" {
+  role       = module.ExportProcess.iam_role_name
+  policy_arn = aws_iam_policy.lambda_sqs_receive_policy.arn
+}
+
+# Cria o gatilho que conecta o SQS à Lambda ExportProcess
+resource "aws_lambda_event_source_mapping" "export_sqs_trigger" {
+  event_source_arn = aws_sqs_queue.report_queue.arn
+  function_name    = module.ExportProcess.lambda_function_arn
+  batch_size       = 1 # Processa uma mensagem de cada vez
 }
