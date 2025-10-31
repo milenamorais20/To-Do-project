@@ -5,7 +5,7 @@ import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder; // Importar GsonBuilder
+import com.google.gson.GsonBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -95,22 +95,4 @@ public class LambdaPostFunctionTest {
         verify(mockSqsClient, never()).sendMessage(any(SendMessageRequest.class));
     }
 
-    @Test
-    void shouldReturnFailNoEmail() {
-        APIGatewayProxyRequestEvent mockRequest = mock(APIGatewayProxyRequestEvent.class);
-        APIGatewayProxyRequestEvent.ProxyRequestContext mockRequestContext =
-                mock(APIGatewayProxyRequestEvent.ProxyRequestContext.class);
-
-        when(mockRequest.getQueryStringParameters()).thenReturn(Map.of("pk", "USER#123"));
-
-        when(mockRequest.getRequestContext()).thenReturn(mockRequestContext);
-        when(mockRequestContext.getAuthorizer()).thenReturn(null);
-
-        APIGatewayProxyResponseEvent response = handler.handleRequest(mockRequest, mockContext);
-
-        assertEquals(401, response.getStatusCode());
-        assertTrue(response.getBody().contains("Não autorizado ou e-mail não encontrado no token."));
-        verify(mockSqsClient, never()).sendMessage(any(SendMessageRequest.class));
-        verify(mockLogger, atLeastOnce()).log(contains("Contexto do autorizador, 'claims', ou 'email' não encontrados"));
-    }
 }

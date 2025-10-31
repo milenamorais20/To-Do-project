@@ -17,8 +17,8 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.ses.SesClient;
 import software.amazon.awssdk.services.ses.model.SendRawEmailRequest;
 
-import java.io.IOException; // Importe IOException
-import java.nio.charset.StandardCharsets; // Importe StandardCharsets
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 
