@@ -37,12 +37,15 @@ resource "aws_lambda_function" "this" {
   filename = var.source_code_path
   source_code_hash = filebase64sha256(var.source_code_path)
 
-  tags = var.tags
-
   environment {
-    variables = {
-      TASKS_TABLE = var.tasks_table_name
-    }
+    variables = merge(
+      {
+        TASKS_TABLE = var.tasks_table_name
+      },
+      var.environment_variables
+    )
   }
+
+  tags = var.tags
 
 }

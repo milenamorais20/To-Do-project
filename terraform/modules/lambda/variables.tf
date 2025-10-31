@@ -37,3 +37,8 @@ variable "tasks_table_name" {
   type        = string
   default     = ""
 }
+variable "environment_variables" {
+  description = "Um mapa de variáveis de ambiente para a função Lambda."
+  type        = map(string)
+  default     = {}
+}

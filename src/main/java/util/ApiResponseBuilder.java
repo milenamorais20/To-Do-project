@@ -3,12 +3,13 @@ package util;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.util.Collections;
 import java.util.Map;
 
 public class ApiResponseBuilder {
-    private static final Gson gson = new Gson();
+    private static final Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 
     private ApiResponseBuilder(){
 
@@ -23,7 +24,7 @@ public class ApiResponseBuilder {
 
 
     public static APIGatewayProxyResponseEvent createErrorResponse(int statusCode, String errorMessage) {
-        Map<String, String> errorPayload = Collections.singletonMap("Erro: ", errorMessage);
+        Map<String, String> errorPayload = Collections.singletonMap("erro", errorMessage);
 
         return new APIGatewayProxyResponseEvent()
                 .withStatusCode(statusCode)

@@ -35,3 +35,13 @@ variable "redeployment_trigger" {
   type        = string
   default     = ""
 }
+
+variable "uri_export_request_list" {
+  description = "O ARN da função Lambda de solicitação de exportação"
+  type        = string
+}
+
+variable "function_export_request_list" {
+  description = "O nome da função Lambda de solicitação de exportação"
+  type        = string
+}

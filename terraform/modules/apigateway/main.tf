@@ -86,6 +86,12 @@ resource "aws_api_gateway_resource" "delete_item_list" {
   path_part   = "delete-item-list"
 }
 
+resource "aws_api_gateway_resource" "export" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
+  path_part   = "export"
+}
+
 resource "aws_api_gateway_authorizer" "cognito_authorizer" {
   name          = "CognitoUserPoolAuthorizer"
   type          = "COGNITO_USER_POOLS"
@@ -163,6 +169,14 @@ resource "aws_api_gateway_method" "delete_item_list_delete" {
   resource_id   = aws_api_gateway_resource.delete_item_list.id
   http_method   = "DELETE"
   authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
+}
+
+resource "aws_api_gateway_method" "export_get" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_resource.export.id
+  http_method   = "GET"
+  authorization = "COGNITO_USER_POOLS" # Usa o autorizador Cognito
   authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
 }
 
@@ -247,6 +261,16 @@ resource "aws_api_gateway_integration" "delete_item_list" {
   uri                     = "arn:aws:apigateway:${data.aws_region.current.name}:lambda:path/2015-03-31/functions/${var.uri_delete_item_list}/invocations"
 }
 
+resource "aws_api_gateway_integration" "export_get_integration" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.export.id
+  http_method = aws_api_gateway_method.export_get.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = "arn:aws:apigateway:${data.aws_region.current.name}:lambda:path/2015-03-31/functions/${var.uri_export_request_list}/invocations"
+}
+
 # Allow API Gateway to invoke Lambdas
 resource "aws_lambda_permission" "apigw_invoke_create" {
   statement_id  = "AllowAPIGatewayInvoke_create"
@@ -312,6 +336,15 @@ resource "aws_lambda_permission" "apigw_invoke_delete_item_list" {
   source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
 }
 
+resource "aws_lambda_permission" "apigw_export_request" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = var.function_export_request_list
+  principal     = "apigateway.amazonaws.com"
+
+  source_arn = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
+}
+
 # Deployment and Stage
 resource "aws_api_gateway_deployment" "deployment" {
   rest_api_id = aws_api_gateway_rest_api.api.id
@@ -333,6 +366,8 @@ resource "aws_api_gateway_deployment" "deployment" {
       aws_api_gateway_integration.update_item_list.id,
       aws_api_gateway_integration.delete_item_list.id,
 
+      aws_api_gateway_integration.export_get_integration.id,
+
       var.uri_create_list,
       var.uri_list_lists,
       var.uri_update_list,
@@ -342,6 +377,8 @@ resource "aws_api_gateway_deployment" "deployment" {
       var.uri_list_items_list,
       var.uri_update_item_list,
       var.uri_delete_item_list,
+
+      var.uri_export_request_list,
 
       var.redeployment_trigger
     ]))
@@ -356,7 +393,9 @@ resource "aws_api_gateway_deployment" "deployment" {
     aws_api_gateway_integration.create_item_list,
     aws_api_gateway_integration.list_items_list,
     aws_api_gateway_integration.update_item_list,
-    aws_api_gateway_integration.delete_item_list
+    aws_api_gateway_integration.delete_item_list,
+
+    aws_api_gateway_integration.export_get_integration
   ]
 }
 
