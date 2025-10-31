@@ -34,6 +34,7 @@ jobs:
 
     env:
       TF_VAR_bucket_name: ${{ secrets.BUCKET_NAME_TODO_LIST }}
+      TF_VAR_ses_from_email: ${{ secrets.SES_FROM_EMAIL }}
 
     steps:
       - name: Checkout Repository
