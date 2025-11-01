@@ -76,3 +76,22 @@ O projeto é gerenciado pelo Maven. Para compilar o código, executar os testes 
 ```bash
 # A partir do diretório raiz do projeto (todo-project)
 mvn clean package
+```
+Isso irá gerar o artefato .jar (ex: TODOLambdaJava-1.0-SNAPSHOT.jar) no diretório target/. Este é o arquivo que será implantado nas funções Lambda.
+
+### 2. Implantar a Infraestrutura (Terraform)
+Com o .jar construído, você pode implantar toda a infraestrutura na sua conta AWS usando o Terraform.
+
+# Navegue até o diretório do Terraform
+cd terraform
+
+# Inicialize o Terraform
+terraform init
+
+# (Opcional) Planeje a implantação para revisar as alterações
+terraform plan
+
+# Aplique a configuração para criar os recursos
+terraform apply
+
+O Terraform cuidará de criar a tabela DynamoDB, as funções Lambda (fazendo o upload do .jar), o API Gateway, a fila SQS e todos os outros recursos necessários, conectando-os corretamente.
