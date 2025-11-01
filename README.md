@@ -81,7 +81,7 @@ Isso irá gerar o artefato .jar (ex: TODOLambdaJava-1.0-SNAPSHOT.jar) no diretó
 
 ### 2. Implantar a Infraestrutura (Terraform)
 Com o .jar construído, você pode implantar toda a infraestrutura na sua conta AWS usando o Terraform.
-
+```bash
 # Navegue até o diretório do Terraform
 cd terraform
 
@@ -93,5 +93,6 @@ terraform plan
 
 # Aplique a configuração para criar os recursos
 terraform apply
+```
 
 O Terraform cuidará de criar a tabela DynamoDB, as funções Lambda (fazendo o upload do .jar), o API Gateway, a fila SQS e todos os outros recursos necessários, conectando-os corretamente.
