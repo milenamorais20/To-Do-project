@@ -50,7 +50,7 @@ public class LambdaPostFunction implements RequestHandler<APIGatewayProxyRequest
 
             String userEmail = getUserEmailFromAuthContext(requestEvent, logger);
             if (userEmail == null || userEmail.isBlank()) {
-                logger.log("Erro: Não foi possível obter o e-mail do usuário autenticado. O Authorizer está configurado?");
+                logger.log("Erro: Não foi possível obter o e-mail do usuário autenticado. Verique se o  Authorizer está configurado");
                 return ApiResponseBuilder.createErrorResponse(401, "Não autorizado ou e-mail não encontrado no token.");
             }
 
@@ -62,11 +62,13 @@ public class LambdaPostFunction implements RequestHandler<APIGatewayProxyRequest
             );
             String messageBodyJson = gson.toJson(sqsMessageBody);
 
+            // Cria mensagem para fila
             SendMessageRequest sendMessageRequest = SendMessageRequest.builder()
                     .queueUrl(sqsQueueUrl)
                     .messageBody(messageBodyJson)
                     .build();
 
+            // Envia a mensagem para fila
             sqsClient.sendMessage(sendMessageRequest);
             logger.log("Mensagem enviada com sucesso para o SQS. Corpo: " + messageBodyJson);
 
@@ -81,6 +83,7 @@ public class LambdaPostFunction implements RequestHandler<APIGatewayProxyRequest
             return ApiResponseBuilder.createErrorResponse(500, "Erro interno do servidor.");
         }
     }
+//    Extrai o e-mail do usuário do contexto do autorizador do API Gateway (configurado com Cognito)
     @SuppressWarnings("unchecked")
     private String getUserEmailFromAuthContext(APIGatewayProxyRequestEvent requestEvent, LambdaLogger logger) {
         try {

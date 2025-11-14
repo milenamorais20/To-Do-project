@@ -51,7 +51,7 @@ public class UpdateList implements RequestHandler<APIGatewayProxyRequestEvent, A
             String encodedPk = pathParams != null ? pathParams.get("pk") : null;
             String encodedSk = pathParams != null ? pathParams.get("sk") : null;
 
-            // Decodifica os valores para o formato original %23 -> #
+            // Decodifica os valores para o formato original %23 para #
             String pk = (encodedPk != null) ? URLDecoder.decode(encodedPk, StandardCharsets.UTF_8) : null;
             String sk = (encodedSk != null) ? URLDecoder.decode(encodedSk, StandardCharsets.UTF_8) : null;
 

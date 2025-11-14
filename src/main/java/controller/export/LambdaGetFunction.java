@@ -54,8 +54,8 @@ public class LambdaGetFunction implements RequestHandler<SQSEvent, Void> {
         DynamoDbEnhancedClient enhancedClient = DynamoDbEnhancedClient.builder().dynamoDbClient(client).build();
         String tableName = System.getenv("TASKS_TABLE");
         DynamoDbTable<Task> table = enhancedClient.table(tableName, TableSchema.fromBean(Task.class));
-        this.repository = new TaskRepository(table);
 
+        this.repository = new TaskRepository(table);
         this.s3Client = S3Client.builder().build();
         this.sesClient = SesClient.builder().build();
         this.s3BucketName = System.getenv("S3_BUCKET_NAME");
@@ -70,11 +70,12 @@ public class LambdaGetFunction implements RequestHandler<SQSEvent, Void> {
         this.sesFromEmail = sesFromEmail;
     }
 
+//    Processa as mensagens da fila SQS.
     @Override
     public Void handleRequest(SQSEvent sqsEvent, Context context) {
         LambdaLogger logger = context.getLogger();
 
-        for (SQSEvent.SQSMessage msg : sqsEvent.getRecords()) {
+        for (SQSEvent.SQSMessage msg : sqsEvent.getRecords()) {// sqsEvent.getRecords() obter a lista de mensagens do Amazon SQS contidas no objeto SQSEvent
             String messageId = msg.getMessageId();
             try {
                 logger.log("Processando mensagem SQS: " + messageId);
@@ -135,8 +136,7 @@ public class LambdaGetFunction implements RequestHandler<SQSEvent, Void> {
         }
     }
 
-    private void sendEmailWithAttachment(String toEmail, byte[] csvBytes, String s3Key, LambdaLogger logger)
-            throws MessagingException, IOException {
+    private void sendEmailWithAttachment(String toEmail, byte[] csvBytes, String s3Key, LambdaLogger logger) throws MessagingException, IOException {
 
         Session session = Session.getDefaultInstance(new Properties());
         MimeMessage mimeMessage = new MimeMessage(session);
@@ -152,17 +152,20 @@ public class LambdaGetFunction implements RequestHandler<SQSEvent, Void> {
                 "text/plain; charset=UTF-8"
         );
 
+//        Cria o anexo do CSV
         MimeBodyPart csvAttachmentPart = new MimeBodyPart();
 
         ByteArrayDataSource dataSource = new ByteArrayDataSource(csvBytes, "text/csv");
         csvAttachmentPart.setDataHandler(new DataHandler(dataSource));
         csvAttachmentPart.setFileName("relatorio_tarefas.csv");
 
+        // Monta o e-mail com texto e anexo
         Multipart multipart = new MimeMultipart();
         multipart.addBodyPart(textPart);
         multipart.addBodyPart(csvAttachmentPart);
         mimeMessage.setContent(multipart);
 
+        // Converte a mensagem para o formato Raw e envia via SES
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         mimeMessage.writeTo(outputStream);
         SdkBytes rawMessageBytes = SdkBytes.fromByteArray(outputStream.toByteArray());
