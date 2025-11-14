@@ -32,7 +32,7 @@ public class CreateItemList implements RequestHandler<APIGatewayProxyRequestEven
         this.repository = new TaskRepository(table);
     }
 
-    //Testes Unitários
+    // Para testes
     public CreateItemList(DynamoDbTable<Task> table, TaskRepository repository, Gson json) {
         this.table = table;
         this.repository = repository;
@@ -61,7 +61,7 @@ public class CreateItemList implements RequestHandler<APIGatewayProxyRequestEven
 
             String skList = item.getSk();
             if (skList == null || skList.isBlank()){
-                return ApiResponseBuilder.createErrorResponse(400, "O campo 'pk' no corpo da requisição deve ser preenchido.");
+                return ApiResponseBuilder.createErrorResponse(400, "O campo 'sk' no corpo da requisição deve ser preenchido.");
             }
 
             boolean skListExists = repository.skListExists(pkList, skList);

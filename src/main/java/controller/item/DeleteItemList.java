@@ -71,6 +71,5 @@ public class DeleteItemList implements RequestHandler<APIGatewayProxyRequestEven
         }catch (Exception e) {
             return ApiResponseBuilder.createErrorResponse(500, "Erro inesperado. " + e.getMessage());
         }
-
     }
 }

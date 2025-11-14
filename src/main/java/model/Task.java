@@ -7,16 +7,15 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import java.util.Objects;
 
-@JsonPropertyOrder({"pk", "sk", "description"})
+@JsonPropertyOrder({"pk", "sk", "description"}) // Define a ordem dos campos na serialização jackson para csv
 @DynamoDbBean
 public class Task {
     private String pk;
     private String sk;
     private String description;
 
-    public Task() {
-
-    }
+    // Construtor para o dynamoDB
+    public Task() {}
 
     public Task(String pk, String sk, String description) {
         this.pk = pk;

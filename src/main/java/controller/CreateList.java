@@ -24,14 +24,16 @@ public class CreateList implements RequestHandler<APIGatewayProxyRequestEvent, A
     private final DynamoDbTable<Task> table;
     private final Gson json;
 
-    // Construtor padrão usado pela Lambda
+    // Construtor usado pela lambda
     public CreateList() {
         DynamoDbClient client = DynamoDbClient.builder().build();
         DynamoDbEnhancedClient enhanced = DynamoDbEnhancedClient.builder()
                 .dynamoDbClient(client)
                 .build();
 
+        //é usado para acessar as variáveis de ambiente do sistema operacional
         String tableName = System.getenv("TASKS_TABLE");
+
         this.table = enhanced.table(tableName, TableSchema.fromBean(Task.class));
         this.json = new Gson();
     }
